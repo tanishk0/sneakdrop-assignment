@@ -26,12 +26,7 @@ interface UserState {
   canPurchase: boolean;
 }
 
-interface TestUser {
-  id: string;
-  label: string;
-}
-
-const INITIAL_USERS: TestUser[] = [
+const PRESET_USERS = [
   { id: 'user_1', label: 'User 1 (Alice)' },
   { id: 'user_2', label: 'User 2 (Bob)' },
   { id: 'user_3', label: 'User 3 (Charlie)' },
@@ -40,8 +35,6 @@ const INITIAL_USERS: TestUser[] = [
 ];
 
 export function App() {
-  const [users, setUsers] = useState<TestUser[]>(INITIAL_USERS);
-  const [buyerCount, setBuyerCount] = useState<number>(6);
   const [userId, setUserId] = useState<string>('user_1');
   const [customUserId, setCustomUserId] = useState<string>('');
   const [inventory, setInventory] = useState<InventoryState>({
@@ -98,125 +91,7 @@ export function App() {
     return () => clearInterval(timer);
   }, [secondsRemaining, fetchStatus]);
 
-  // Create a new buyer and select them
-  const handleAddNewBuyer = () => {
-    const nextId = `buyer_${buyerCount}`;
-    const nextLabel = `Buyer #${buyerCount}`;
-    setBuyerCount((prev) => prev + 1);
-    setUsers((prev) => [...prev, { id: nextId, label: nextLabel }]);
-    setUserId(nextId);
-    setCustomUserId('');
-    setNotice({ text: `Switched to newly created ${nextLabel} (${nextId})`, type: 'info' });
-  };
-
-  // 1-Click Buy with a brand new buyer (instantly tests stock count drop / exhaustion)
-  const handleInstantBuyNewBuyer = async () => {
-    setLoading(true);
-    setNotice(null);
-    try {
-      const currentBuyerNum = buyerCount;
-      const newId = `buyer_${currentBuyerNum}`;
-      const newLabel = `Buyer #${currentBuyerNum}`;
-      setBuyerCount((prev) => prev + 1);
-      setUsers((prev) => [...prev, { id: newId, label: newLabel }]);
-      setUserId(newId);
-      setCustomUserId('');
-
-      const res = await fetch('/api/buy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: newId }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setNotice({ text: data.error || 'Failed to process request', type: 'error' });
-      } else if (data.status === 'held') {
-        setNotice({
-          text: `[${newLabel}] Hold acquired! Stock left: ${data.inventoryRemaining}`,
-          type: 'success',
-        });
-        setSecondsRemaining(data.hold?.secondsRemaining || 300);
-      } else if (data.status === 'queued') {
-        setNotice({
-          text: `[${newLabel}] Stock finished (0)! Placed at #${data.position} in waitlist queue.`,
-          type: 'info',
-        });
-      }
-      await fetchStatus();
-    } catch (err: any) {
-      setNotice({ text: err.message || 'Network error', type: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 1-Click Drain Stock to 0: Simulates multiple concurrent buyers to test 0 stock & waitlist immediately
-  const handleDrainStock = async () => {
-    if (inventory.availableStock <= 0) {
-      setNotice({ text: 'Stock is already 0! Click "⚡ Instant Buy (New Buyer)" to test queue placement.', type: 'info' });
-      return;
-    }
-    const needed = inventory.availableStock;
-    setLoading(true);
-    setNotice({ text: `Draining remaining ${needed} pairs with new buyers...`, type: 'info' });
-    try {
-      const startIdx = buyerCount;
-      const newBuyers: TestUser[] = [];
-      const requests = [];
-
-      for (let i = 0; i < needed; i++) {
-        const id = `buyer_${startIdx + i}`;
-        newBuyers.push({ id, label: `Buyer #${startIdx + i}` });
-        requests.push(
-          fetch('/api/buy', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: id }),
-          })
-        );
-      }
-
-      setBuyerCount(startIdx + needed);
-      setUsers((prev) => [...prev, ...newBuyers]);
-      // Select the last buyer created
-      setUserId(`buyer_${startIdx + needed - 1}`);
-      setCustomUserId('');
-
-      await Promise.all(requests);
-      await fetchStatus();
-      setNotice({
-        text: `Stock successfully finished! All ${needed} pairs reserved by new buyers. Next buyers will enter the waitlist queue.`,
-        type: 'success',
-      });
-    } catch (err: any) {
-      setNotice({ text: err.message || 'Failed to drain stock', type: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Reset inventory back to 20
-  const handleReset = async () => {
-    if (!window.confirm('Reset drop back to 20 available pairs? Current holds and queues will be cleared.')) return;
-    setLoading(true);
-    try {
-      const res = await fetch('/api/reset', { method: 'POST' });
-      const data = await res.json();
-      if (res.ok) {
-        setNotice({ text: 'Drop reset: 20 pairs restored, queue and holds cleared.', type: 'success' });
-      } else {
-        setNotice({ text: data.error || 'Failed to reset', type: 'error' });
-      }
-      await fetchStatus();
-    } catch (err: any) {
-      setNotice({ text: err.message || 'Reset failed', type: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Handle Buy Click for active user
+  // Handle Buy Click
   const handleBuy = async () => {
     setLoading(true);
     setNotice(null);
@@ -292,9 +167,9 @@ export function App() {
 
   return (
     <div className="container">
-      {/* Switcher & Add Buyer Bar */}
+      {/* Switcher for testing multiple users */}
       <div className="user-switch-bar">
-        <label htmlFor="user-select">User:</label>
+        <label htmlFor="user-select">Test User: </label>
         <select
           id="user-select"
           value={userId}
@@ -304,25 +179,15 @@ export function App() {
             setNotice(null);
           }}
         >
-          {users.map((u) => (
+          {PRESET_USERS.map((u) => (
             <option key={u.id} value={u.id}>
               {u.label}
             </option>
           ))}
         </select>
-
-        <button
-          type="button"
-          className="btn-add-buyer"
-          onClick={handleAddNewBuyer}
-          title="Create a new test buyer and select them"
-        >
-          + New Buyer
-        </button>
-
         <input
           type="text"
-          placeholder="or custom id"
+          placeholder="or custom user id"
           value={customUserId}
           onChange={(e) => {
             setCustomUserId(e.target.value);
@@ -336,31 +201,11 @@ export function App() {
         <h1 className="title">Sneaker Drop</h1>
         <div className="divider">─────────────</div>
 
-        {/* Live Stock Display */}
         <div className="stock-line">
-          <span>Pairs left:</span>
-          <span className={`highlight-stock ${inventory.availableStock === 0 ? 'out-of-stock' : ''}`}>
-            {inventory.availableStock > 0 ? inventory.availableStock : '0 (SOLD OUT)'}
-          </span>
+          Pairs left: <span className="highlight-stock">{inventory.availableStock}</span>
         </div>
 
-        {/* System metrics snapshot */}
-        <div className="system-stats">
-          <div className="stat-item">
-            <span className="stat-label">Active Holds</span>
-            <span className="stat-val">{inventory.activeHoldsTotal}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">In Waitlist</span>
-            <span className="stat-val">{inventory.waitingQueueTotal}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Total Sold</span>
-            <span className="stat-val">{inventory.totalSold}</span>
-          </div>
-        </div>
-
-        {/* Main Action Button for Active User */}
+        {/* Action Button */}
         <div className="action-section">
           {hasActiveHold ? (
             <button
@@ -419,43 +264,6 @@ export function App() {
             {notice.text}
           </div>
         )}
-
-        {/* Quick Testing Toolkit */}
-        <div className="quick-test-panel">
-          <div className="quick-test-header">
-            <span className="quick-test-title">⚡ Testing Toolkit (Stock & Queue)</span>
-          </div>
-          <div className="quick-test-actions">
-            <button
-              type="button"
-              className="btn-test btn-test-primary"
-              onClick={handleInstantBuyNewBuyer}
-              disabled={loading}
-            >
-              ⚡ Instant Buy (New Buyer)
-            </button>
-            <div className="test-sub-actions">
-              <button
-                type="button"
-                className="btn-test btn-test-drain"
-                onClick={handleDrainStock}
-                disabled={loading || inventory.availableStock <= 0}
-                title="Create buyers to reserve all remaining stock down to 0"
-              >
-                🔥 Drain Stock ({inventory.availableStock} left)
-              </button>
-              <button
-                type="button"
-                className="btn-test btn-test-reset"
-                onClick={handleReset}
-                disabled={loading}
-                title="Reset database to 20 stock"
-              >
-                🔄 Reset (20 pairs)
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
