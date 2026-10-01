@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String?       @unique
+  name         String
+  createdAt    DateTime      @default(now())
+  
+  holds        Hold[]
+  purchases    Purchase[]
+  queueEntries QueueEntry[]
+  payments     Payment[]
+
+  @@map("users")
+}
+
+model Inventory {
+  id             Int      @id @default(1)
+  totalStock     Int      @default(20)
+  availableStock Int      @default(20)
+  updatedAt      DateTime @updatedAt
+
+  @@map("inventory")
+}
+
+enum HoldStatus {
+  ACTIVE      // Currently held (within 5-min window)
+  PURCHASED   // Payment completed successfully
+  EXPIRED     // 5-min timer lapsed without payment
+  CANCELLED   // User manually cancelled hold
+}
+
+model Hold {
+  id          String      @id @default(uuid())
+  userId      String
+  status      HoldStatus  @default(ACTIVE)
+  expiresAt   DateTime
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purchase    Purchase?
+  payments    Payment[]
+
+  @@index([userId, status])
+  @@index([status, expiresAt])
+  @@map("holds")
+}
+
+model Purchase {
+  id          String   @id @default(uuid())
+  userId      String
+  holdId      String   @unique
+  paymentId   String   @unique
+  amount      Decimal  @default(150.00) @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hold        Hold     @relation(fields: [holdId], references: [id])
+  payment     Payment  @relation(fields: [paymentId], references: [id])
+
+  @@index([userId])
+  @@map("purchases")
+}
+
+enum QueueStatus {
+  WAITING     // Currently waiting in line
+  PROMOTED    // Granted a hold from the waitlist
+  EXPIRED     // Promoted hold expired
+  CANCELLED   // User left queue
+}
+
+model QueueEntry {
+  id          String      @id @default(uuid())
+  userId      String
+  status      QueueStatus @default(WAITING)
+  joinedAt    DateTime    @default(now())
+  promotedAt  DateTime?
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, joinedAt])
+  @@index([userId, status])
+  @@map("queue_entries")
+}
+
+enum PaymentStatus {
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id             String        @id // Provided by payment gateway webhook (or generated)
+  userId         String
+  holdId         String
+  amount         Decimal       @default(150.00) @db.Decimal(10, 2)
+  status         PaymentStatus @default(SUCCESS)
+  idempotencyKey String?       @unique
+  rawPayload     String?       // JSON audit trail of webhook
+  processedAt    DateTime      @default(now())
+
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hold           Hold          @relation(fields: [holdId], references: [id])
+  purchase       Purchase?
+
+  @@index([userId])
+  @@index([holdId])
+  @@map("payments")
+}

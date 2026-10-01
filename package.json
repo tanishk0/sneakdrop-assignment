@@ -1,0 +1,38 @@
+{
+  "name": "sneakdrop-assignment",
+  "version": "1.0.0",
+  "description": "High concurrency sneaker drop system with 5-min holds and waitlist queue",
+  "type": "module",
+  "scripts": {
+    "build:client": "npm --prefix client run build",
+    "build": "npm run build:client && tsc",
+    "dev:server": "tsx watch src/index.ts",
+    "dev:client": "npm --prefix client run dev",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "start": "tsx src/index.ts",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "prisma:seed": "tsx prisma/seed.ts",
+    "test:concurrency": "tsx scripts/simulate-drop.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "bullmq": "^6.3.10",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.5",
+    "express": "^5.2.1",
+    "ioredis": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.3",
+    "concurrently": "^10.0.5",
+    "prisma": "^6.19.3",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3"
+  }
+}
