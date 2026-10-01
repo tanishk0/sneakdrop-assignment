@@ -2,6 +2,8 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+RUN apk add --no-cache openssl
+
 # Copy root and client package files
 COPY package*.json ./
 RUN npm ci
@@ -24,6 +26,8 @@ COPY src ./src
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+RUN apk add --no-cache openssl
+
 ENV NODE_ENV=production
 
 COPY package*.json ./
@@ -36,8 +40,6 @@ COPY --from=builder /app/client/dist ./client/dist
 COPY --from=builder /app/src ./src
 COPY tsconfig.json ./
 
-RUN npm install -g tsx prisma
-
 EXPOSE 3000
 
-CMD ["sh", "-c", "prisma db push --skip-generate && tsx src/index.ts"]
+CMD ["sh", "-c", "npx prisma db push && npx tsx prisma/seed.ts && npx tsx src/index.ts"]
