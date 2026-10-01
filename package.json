@@ -13,7 +13,10 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:seed": "tsx prisma/seed.ts",
-    "test:concurrency": "tsx scripts/simulate-drop.ts"
+    "test:concurrency": "tsx scripts/simulate-drop.ts",
+    "test:worker": "tsx scripts/test-worker.ts",
+    "test:payment": "tsx scripts/test-payment.ts",
+    "test": "tsx scripts/simulate-drop.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
