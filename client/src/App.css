@@ -1,0 +1,171 @@
+.container {
+  max-width: 480px;
+  margin: 40px auto;
+  padding: 0 16px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  color: #111827;
+}
+
+.user-switch-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.user-switch-bar select,
+.custom-user-input {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #111827;
+}
+
+.custom-user-input {
+  width: 130px;
+}
+
+.card {
+  border: 2px solid #111827;
+  padding: 32px 28px;
+  background-color: #ffffff;
+  box-shadow: 4px 4px 0px #111827;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+}
+
+.divider {
+  color: #9ca3af;
+  margin-bottom: 20px;
+  font-size: 14px;
+  user-select: none;
+}
+
+.stock-line {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.highlight-stock {
+  font-size: 22px;
+  font-weight: 700;
+  color: #059669;
+}
+
+.action-section {
+  margin-bottom: 28px;
+}
+
+.btn {
+  width: 100%;
+  padding: 14px 20px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border: 2px solid #111827;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  box-shadow: 3px 3px 0px #111827;
+}
+
+.btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #111827;
+}
+
+.btn:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  border-color: #d1d5db;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-buy {
+  background-color: #111827;
+  color: #ffffff;
+}
+
+.btn-buy:hover:not(:disabled) {
+  background-color: #1f2937;
+}
+
+.btn-pay {
+  background-color: #059669;
+  color: #ffffff;
+}
+
+.btn-pay:hover:not(:disabled) {
+  background-color: #047857;
+}
+
+.section {
+  margin-top: 20px;
+  border-top: 1px dashed #d1d5db;
+  padding-top: 16px;
+}
+
+.section-label {
+  font-size: 13px;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+.countdown-timer {
+  font-size: 24px;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.queue-position {
+  font-size: 24px;
+  font-weight: 700;
+  color: #d97706;
+}
+
+.purchases-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.notice-box {
+  margin-top: 20px;
+  padding: 10px 12px;
+  font-size: 13px;
+  border-radius: 4px;
+  line-height: 1.4;
+}
+
+.notice-success {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.notice-error {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.notice-info {
+  background-color: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
